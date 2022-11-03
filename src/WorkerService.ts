@@ -238,7 +238,7 @@ class WorkerService<T extends {}> {
                                 method: String(key),
                                 data: bsonData,
                                 port: port2,
-                            }, [bsonData.buffer]);
+                            }, [bsonData.buffer, port2]);
 
                             timeoutId = setTimeout(() => {
                                 reject(makeError({type: 'error', message: `Timeout calling ${String(key)} after ${methodOpts.timeout}ms`}));
