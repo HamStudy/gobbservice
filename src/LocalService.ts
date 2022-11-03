@@ -35,20 +35,38 @@ class LocalService<T extends {}> {
                 (<any>output)[key] = async (...args: any[]) => {
                     const outStream = new SimpleReadable();
 
+                    let timeoutId: NodeJS.Timeout | null = null;
+                    function resetTimeout() {
+                        if (timeoutId) { clearTimeout(timeoutId); }
+                        timeoutId = setTimeout(() => {
+                            outStream.destroy(makeError({
+                                type: 'error',
+                                message: `Timeout calling ${String(key)} after ${methodOpts.timeout}ms`,
+                            }));
+                        }, methodOpts.timeout);
+                    }
+                    resetTimeout();
                     // This is inarguably wasteful, but it does ensure that things will behave the same
                     // whether you are using a local service or some type of remote service.
                     const processedArgs = bsonCodec.decode(bsonCodec.encode(args));
                     const streamOrPromise = await lib[key as keyof T](...processedArgs);
+                    resetTimeout();
 
                     const resStream = isPromise(streamOrPromise) ? await streamOrPromise : streamOrPromise;
 
                     resStream.on('data', (chunk: any) => {
+                        resetTimeout();
                         outStream.push(chunk);
                     });
                     resStream.on('end', () => {
                         outStream.push(null);
+                        if (timeoutId) { clearTimeout(timeoutId); }
+                        timeoutId = null;
                     });
                     resStream.on('error', (err: any) => {
+                        if (timeoutId) { clearTimeout(timeoutId); }
+                        timeoutId = null;
+
                         outStream.destroy(makeError({
                             type: 'error',
                             message: err?.message ?? 'Unknown error',
@@ -63,7 +81,7 @@ class LocalService<T extends {}> {
                     const processedArgs = bsonCodec.decode(bsonCodec.encode(args));
                     const result = await Promise.race([
                         lib[key as keyof T](...processedArgs),
-                        new Promise((resolve, reject) => setTimeout(reject, timeout, new Error("Timeout"))),
+                        new Promise((resolve, reject) => setTimeout(reject, methodOpts.timeout, new Error(`Timeout calling ${String(key)} after ${methodOpts.timeout}ms`))),
                     ]);
                     const processedResult = bsonCodec.decode(bsonCodec.encode(result));
 

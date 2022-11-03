@@ -33,7 +33,7 @@ function makeDeferred<T>(timeout: number = 30000) {
 }
 type Deferred<T> = ReturnType< typeof makeDeferred<T> >;
 
-type ResponseTarget = {dfd: Deferred<any>} | {stream: stream.Readable};
+type ResponseTarget = {timeout: number} & ({dfd: Deferred<any>} | {stream: stream.Readable});
 
 interface RequestResponseHelperOptions {
     topicBase?: string;
@@ -168,40 +168,56 @@ export class RequestResponseHelper {
         }
     }
 
-    request(topic: string, data: any, opts: {timeout?: number} = {}) {
+    request(topic: string, data: any, {timeout}: {timeout?: number} = {}) {
         const replyTopic = makeReplyTopic();
         const dfd = makeDeferred<any>();
         const headers = makeHeaders();
         headers.set('rTo', replyTopic);
 
-        this.listenForResponse(replyTopic, {dfd});
+        this.listenForResponse(replyTopic, {dfd, timeout});
         this.conn.publish(topic, bsonCodec.encode(data), {
             headers,
         });
 
-        return dfd.promise$;
+        return Promise.race([
+            dfd.promise$,
+            new Promise((_, rej) => setTimeout(() => rej(new Error(`Timeout after ${timeout}ms`)), timeout)),
+        ]);
     }
-    requestStream(topic: string, data: any, opts: {timeout?: number} = {}): stream.Readable {
+    requestStream(topic: string, data: any, {timeout}: {timeout?: number} = {}): stream.Readable {
         const replyTopic = makeReplyTopic();
-        console.log("Created stream");
+        // console.log("Created stream");
         const outStream = new SimpleReadable();
         outStream.pause();
 
-        outStream.on("close", () => console.log("Closed stream"));
-        outStream.on("end", () => console.log("Ended stream"));
-        outStream.on("finish", () => console.log("Finished stream"));
-        outStream.on("error", (err) => console.log("Error stream:", err));
-        // On data print the size of the chunk received
-        outStream.on("data", (chunk) => console.log("Received chunk:", chunk.length));
-
-        // outStream.push(Buffer.from("1")); // Zero byte buffer to wake it up
+        // outStream.on("close", () => console.log("Closed stream"));
+        // outStream.on("end", () => console.log("Ended stream"));
+        // outStream.on("finish", () => console.log("Finished stream"));
+        // outStream.on("error", (err) => console.log("Error stream:", err));
+        // // On data print the size of the chunk received
+        // outStream.on("data", (chunk) => console.log("Received chunk:", chunk.length));
 
         const headers = makeHeaders();
         headers.set('rTo', replyTopic);
 
-        this.listenForResponse(replyTopic, {stream: outStream});
+        this.listenForResponse(replyTopic, {stream: outStream, timeout});
         this.conn.publish(topic, bsonCodec.encode(data), {
             headers,
+        });
+
+        let timeoutId: NodeJS.Timeout | null = null;
+        function resetTimeout() {
+            if (timeoutId) { clearTimeout(timeoutId); }
+            timeoutId = setTimeout(() => {
+                outStream.destroy(new Error(`Timeout after ${timeout}ms`));
+            });
+        }
+        outStream.on('data', resetTimeout);
+        outStream.on('end', () => {
+            if (timeoutId) { clearTimeout(timeoutId); }
+        });
+        outStream.on('error', () => {
+            if (timeoutId) { clearTimeout(timeoutId); }
         });
 
         return outStream;

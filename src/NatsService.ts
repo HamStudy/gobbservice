@@ -32,8 +32,6 @@ class NatsService<T extends {}> {
             queue: this.subjectPrefix.replace(/\./g, '_'),
         });
         this.sub = sub;
-        console.log(`Subscribed to ${this.subjectPrefix}.*`);
-
         for await (const msg of sub) {
             const method = msg.subject.split('.').pop();
             const args = bsonCodec.decode(msg.data);
@@ -51,6 +49,7 @@ class NatsService<T extends {}> {
 
             this.handleMethodCall(method, args, replyTo);
         }
+        return this;
     }
     isReady() {
         return this.sub && !this.sub.isClosed() && !this.sub.isDraining();
@@ -98,7 +97,6 @@ class NatsService<T extends {}> {
                             }
                         } else {
                             const bsonData = bsonCodec.encode(chunk);
-                            console.log("Chunk size:", chunk.length, bsonData.length);
                             this.conn.publish(replyTo, bsonData, pubOpts);
                         }
                     }
@@ -115,7 +113,6 @@ class NatsService<T extends {}> {
                 message: err.message,
                 stack: err.stack,
             };
-            console.warn("Error calling method", method, err);
             this.conn.publish(replyTo, bsonCodec.encode(errObj));
         }
     }
@@ -140,10 +137,9 @@ class NatsService<T extends {}> {
                 } else {
                     (<any>output)[key] = async (...args: any[]) => {
                         try {
-                            console.log(`Sending message to ${topic}`);
                             return await requestHelper.request(topic, args, methodOpts);
                         } finally {
-                            console.log(`Response from ${topic} received`);
+                            // console.log(`Response from ${topic} received`);
                         }
                     };
                 }
