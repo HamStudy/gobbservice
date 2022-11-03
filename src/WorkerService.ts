@@ -254,11 +254,11 @@ class WorkerService<T extends {}> {
             }
         }
         return {
-            output,
+            ...output,
             get currentlyActive() {
                 return curActive;
             }
-        } as any;
+        };
     }
 
     static async createOnWorkerThread<T extends {}>(lib: T) {
