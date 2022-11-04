@@ -93,6 +93,8 @@ class WorkerService<T extends {}> {
 
         let curActive = 0;
 
+        let idleClose: NodeJS.Timeout | null = null;
+
         /**
          * Starts the worker thread on demand
          * @returns a promise that resolves when the worker is ready
@@ -125,8 +127,23 @@ class WorkerService<T extends {}> {
          */
         function closeIfIdle() {
             if (curActive === 0) {
+                console.log(`worker ${curWorker?.threadId} is idle, closing`);
                 curWorker?.terminate();
                 curWorker = null;
+            }
+        }
+        function resetIdleTimer() {
+            if (stopIdleAfter > -1) {
+                if (idleClose) {
+                    clearTimeout(idleClose);
+                }
+                idleClose = setTimeout(closeIfIdle, stopIdleAfter);
+            }
+        }
+        function cancelIdleClose() {
+            if (idleClose) {
+                clearTimeout(idleClose);
+                idleClose = null;
             }
         }
 
@@ -138,6 +155,7 @@ class WorkerService<T extends {}> {
                 };
                 if (methodOpts.type === 'stream') {
                     (<any>output)[key] = async (...args: any[]) => {
+                        cancelIdleClose();
                         const worker = await getWorker();
                         curActive++;
                         const { port1, port2 } = new threads.MessageChannel();
@@ -152,9 +170,7 @@ class WorkerService<T extends {}> {
                             }
                             if (timeoutId) { clearTimeout(timeoutId); }
 
-                            if (stopIdleAfter > 0) {
-                                setTimeout(closeIfIdle, 5000);
-                            }
+                            resetIdleTimer();
                         }
                         function resetTimeout() {
                             if (timeoutId) { clearTimeout(timeoutId); }
@@ -212,6 +228,7 @@ class WorkerService<T extends {}> {
                     };
                 } else {
                     (<any>output)[key] = async (...args: any[]) => {
+                        cancelIdleClose();
                         curActive++;
                         const p = new Promise(async (resolve, reject) => {
                             const worker = await getWorker();
