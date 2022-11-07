@@ -18,7 +18,8 @@ class NatsService<T extends {}> {
     }
 
     get maxSize() {
-        return this.conn?.info?.max_payload || DEFAULT_MAX_MSG_SIZE;
+
+        return ((this.conn?.info?.max_payload ?? 0) * 0.9) || DEFAULT_MAX_MSG_SIZE;
     }
 
     getValidatorForField(f: string) {
@@ -93,7 +94,8 @@ class NatsService<T extends {}> {
                                 const start = i * maxSize;
                                 const end = start + maxSize;
                                 const chunkToSend = (<Buffer>chunk).subarray(start, end);
-                                this.conn.publish(replyTo, chunkToSend, pubOpts);
+                                const bsonData = bsonCodec.encode(chunkToSend);
+                                this.conn.publish(replyTo, bsonData, pubOpts);
                             }
                         } else {
                             const bsonData = bsonCodec.encode(chunk);
