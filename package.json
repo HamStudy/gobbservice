@@ -1,12 +1,12 @@
 {
   "name": "gobbservice",
-  "version": "0.9.3",
+  "version": "0.9.5",
   "description": "Simple Typescript framework for creating in-tree microservices which can run local, in a worker thread, or via something like NATS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "tsc -p ."
+    "prepublishOnly": "tsc -p ."
   },
   "files": [
     "dist",
@@ -38,6 +38,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/uuid": "^8.3.4"
+    "@types/node": "^18.11.9",
+    "@types/uuid": "^8.3.4",
+    "typescript": "^4.8.4"
   }
 }
