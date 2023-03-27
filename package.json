@@ -1,7 +1,7 @@
 {
   "name": "gobbservice",
   "type": "module",
-  "version": "0.9.6",
+  "version": "1.0.0",
   "description": "Simple Typescript framework for creating in-tree microservices which can run local, in a worker thread, or via something like NATS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
