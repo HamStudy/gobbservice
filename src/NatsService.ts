@@ -1,14 +1,14 @@
 
-import { NatsConnection, PublishOptions, headers as makeHeaders, Subscription, Codec } from 'nats';
-import { ObjWithMethods, ObjWithMethodOpts, ResponseWithError, getLibMethods } from './types';
+import { headers as makeHeaders, NatsConnection, PublishOptions, Subscription } from 'nats';
 import bsonCodec from './bsonCodec';
 import { RequestResponseHelper } from './RequestResponseHelper';
+import { getLibMethods, type ObjWithMethodOpts, type ObjWithMethods, type ResponseWithError } from './types';
 
 // 768kb is the max message size,
 // if the stream returns more than that
 // we will split it into multiple messages
 const DEFAULT_MAX_MSG_SIZE = 1024 * 768;
-class NatsService<T extends {}> {
+export class NatsService<T extends {}> {
     private lib: ObjWithMethods;
 
     private sub: Subscription | null = null;
@@ -151,4 +151,5 @@ class NatsService<T extends {}> {
     }
 }
 
-export {NatsService};
+export default NatsService;
+

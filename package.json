@@ -1,17 +1,47 @@
 {
   "name": "gobbservice",
+  "type": "module",
   "version": "0.9.6",
   "description": "Simple Typescript framework for creating in-tree microservices which can run local, in a worker thread, or via something like NATS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "tsc -p ."
+    "build": "tsup",
+    "prepublishOnly": "tsup"
   },
   "files": [
     "dist",
     "src"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./WorkerService": {
+      "import": "./dist/WorkerService.js",
+      "require": "./dist/WorkerService.cjs",
+      "types": "./dist/WorkerService.d.ts"
+    },
+    "./LocalService": {
+      "import": "./dist/LocalService.js",
+      "require": "./dist/LocalService.cjs",
+      "types": "./dist/LocalService.d.ts"
+    },
+    "./NatsService": {
+      "import": "./dist/NatsService.js",
+      "require": "./dist/NatsService.cjs",
+      "types": "./dist/NatsService.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs",
+      "types": "./dist/types.d.ts"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HamStudy/gobbservice.git"
@@ -40,6 +70,10 @@
   "devDependencies": {
     "@types/node": "^18.11.9",
     "@types/uuid": "^8.3.4",
-    "typescript": "^4.8.4"
+    "tsup": "^6.7.0",
+    "typescript": "^4.8.4",
+    "bson": "^4.7.0",
+    "nats": "~2.8.0",
+    "tslib": ">=2.4.0"
   }
 }

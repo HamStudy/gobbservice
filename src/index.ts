@@ -3,7 +3,7 @@ export { LocalService } from './LocalService';
 export { NatsService } from './NatsService';
 export { WorkerService } from './WorkerService';
 
-export {
+export type {
     MethodOpts,
     ObjWithMethodOpts,
     ObjWithMethods,

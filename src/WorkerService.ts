@@ -5,16 +5,16 @@ import bsonCodec from './bsonCodec';
 import { MessagePort } from 'worker_threads';
 import * as threads from 'worker_threads';
 
-interface WorkerConsumer {
+export interface WorkerConsumer {
     get currentlyActive(): number;
 }
 
-interface WorkerOptions {
+export interface WorkerOptions {
     stopIdleAfter?: number;
     timeout?: number;
 }
 
-class WorkerService<T extends {}> {
+export class WorkerService<T extends {}> {
     private lib: ObjWithMethods;
 
     constructor(lib: T) {
@@ -306,4 +306,4 @@ class WorkerService<T extends {}> {
     }
 }
 
-export {WorkerService};
+export default WorkerService;

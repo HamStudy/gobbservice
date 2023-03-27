@@ -12,13 +12,13 @@
         "skipLibCheck": true,
         "lib": [
             "DOM",
-            "es2020",
+            "es2020"
         ],
         "removeComments": false,
         "target": "es2020",
         "declaration": true
     },
     "include": [
-        "src/**/*",
+        "src/**/*"
     ]
 }

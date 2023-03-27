@@ -1,9 +1,9 @@
 
-import { NatsConnection, headers as makeHeaders, Subscription, Msg as NatsMsg } from 'nats';
+import { type NatsConnection, headers as makeHeaders, type Subscription, type Msg as NatsMsg } from 'nats';
+import { isRemoteError, makeError, SimpleReadable } from './types';
 import bsonCodec from './bsonCodec';
 import * as uuid from 'uuid';
 import stream from 'stream';
-import { isRemoteError, makeError, SimpleReadable } from './types';
 
 const processUuid = uuid.v4();
 let topicBase = 'nINBOX.dev';
@@ -35,7 +35,7 @@ type Deferred<T> = ReturnType< typeof makeDeferred<T> >;
 
 type ResponseTarget = {timeout: number} & ({dfd: Deferred<any>} | {stream: stream.Readable});
 
-interface RequestResponseHelperOptions {
+export interface RequestResponseHelperOptions {
     topicBase?: string;
 }
 
@@ -223,3 +223,5 @@ export class RequestResponseHelper {
         return outStream;
     }
 }
+
+export default RequestResponseHelper;

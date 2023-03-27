@@ -1,5 +1,5 @@
 
-import { getLibMethods, isPromise, makeError, ObjWithMethodOpts, ObjWithMethods, SimpleReadable } from './types';
+import { getLibMethods, isPromise, makeError, SimpleReadable, type ObjWithMethodOpts, type ObjWithMethods } from './types';
 
 import bsonCodec from './bsonCodec';
 
